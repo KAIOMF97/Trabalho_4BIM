@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Carro - AutoMax</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">AutoMax</div>
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="/">Início</a></li>
+                        <li><a href="/frontend/pages/carros.html">Carros</a></li>
+                        <li><a href="/frontend/pages/sobre.html">Sobre</a></li>
+                        <li><a href="/frontend/pages/contato.html">Contato</a></li>
+                    </ul>
+                </nav>
+                <div class="user-info" id="user-info">
+                    <!-- Conteúdo será preenchido pelo JavaScript -->
+                </div>
+                <a href="/frontend/pages/login.html" class="btn btn-primary" id="login-btn">Login</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Carregando detalhes do carro...</p>
+            </div>
+
+            <div id="carro-detalhes" class="hidden">
+                <!-- Conteúdo será preenchido pelo JavaScript -->
+            </div>
+
+            <div id="error-message" class="alert alert-error hidden">
+                Carro não encontrado ou erro ao carregar os detalhes.
+            </div>
+        </div>
+    </main>
+
+    <footer style="background-color: #2c3e50; color: white; text-align: center; padding: 2rem 0; margin-top: 3rem;">
+        <div class="container">
+            <p>&copy; 2024 AutoMax. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const carroId = urlParams.get('id');
+
+            if (!carroId) {
+                mostrarErro();
+                return;
+            }
+
+            await carregarDetalhesCarro(carroId);
+        });
+
+        async function carregarDetalhesCarro(carroId) {
+            const loadingElement = document.getElementById('loading');
+            const carroDetalhes = document.getElementById('carro-detalhes');
+            const errorMessage = document.getElementById('error-message');
+
+            try {
+                // Carregar dados do carro, detalhes e acessórios
+                const [carro, carroComDetalhes, carroComAcessorios] = await Promise.all([
+                    API.buscarCarro(carroId),
+                    API.buscarCarroComDetalhes(carroId),
+                    API.buscarCarroComAcessorios(carroId)
+                ]);
+
+                if (carro && !carro.erro) {
+                    loadingElement.classList.add('hidden');
+                    carroDetalhes.classList.remove('hidden');
+
+                    // Combinar dados
+                    const detalhes = carroComDetalhes || carro;
+                    const acessorios = carroComAcessorios?.acessorios || [];
+
+                    carroDetalhes.innerHTML = `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                            <div>
+                                <img src="${carro.imagem_url || 'https://via.placeholder.com/500x300?text=Sem+Imagem'}" 
+                                     alt="${carro.modelo}" 
+                                     style="width: 100%; height: 300px; object-fit: cover; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                            </div>
+                            <div>
+                                <h1 style="color: #2c3e50; margin-bottom: 1rem;">${carro.modelo}</h1>
+                                <h2 style="color: #7f8c8d; margin-bottom: 1rem;">${carro.marca} - ${carro.ano}</h2>
+                                <p style="font-size: 2rem; color: #27ae60; font-weight: bold; margin-bottom: 1rem;">
+                                    R$ ${parseFloat(carro.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </p>
+                                <p style="margin-bottom: 2rem; color: #555; line-height: 1.6;">
+                                    ${carro.descricao || 'Descrição não disponível'}
+                                </p>
+                                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                                    <a href="/frontend/pages/checkout.html?id=${carro.id}" class="btn btn-success" style="font-size: 1.1rem; padding: 0.75rem 2rem;">
+                                        Comprar Agora
+                                    </a>
+                                    <a href="/frontend/pages/carros.html" class="btn btn-secondary">Voltar aos Carros</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${detalhes.cor || detalhes.quilometragem || detalhes.tipo_combustivel || detalhes.num_portas ? `
+                        <div class="card" style="margin-bottom: 2rem;">
+                            <div class="card-content">
+                                <h3 style="color: #2c3e50; margin-bottom: 1rem;">Detalhes Técnicos</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    ${detalhes.cor ? `<div><strong>Cor:</strong> ${detalhes.cor}</div>` : ''}
+                                    ${detalhes.quilometragem ? `<div><strong>Quilometragem:</strong> ${parseInt(detalhes.quilometragem).toLocaleString('pt-BR')} km</div>` : ''}
+                                    ${detalhes.tipo_combustivel ? `<div><strong>Combustível:</strong> ${detalhes.tipo_combustivel}</div>` : ''}
+                                    ${detalhes.num_portas ? `<div><strong>Portas:</strong> ${detalhes.num_portas}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        ${acessorios.length > 0 ? `
+                        <div class="card">
+                            <div class="card-content">
+                                <h3 style="color: #2c3e50; margin-bottom: 1rem;">Acessórios Inclusos</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                                    ${acessorios.map(acessorio => `
+                                        <div style="padding: 1rem; background: #f8f9fa; border-radius: 5px; position: relative;">
+                                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                                <h4 style="color: #2c3e50; margin: 0; flex: 1;">${acessorio.nome}</h4>
+                                                <span style="background: #3498db; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+                                                    Qtd: ${acessorio.quantidade || 1}
+                                                </span>
+                                            </div>
+                                            <p style="color: #555; margin-bottom: 0.5rem;">${acessorio.descricao || 'Sem descrição'}</p>
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <p style="color: #27ae60; font-weight: bold; margin: 0;">R$ ${parseFloat(acessorio.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                                                ${acessorio.quantidade > 1 ? `
+                                                    <small style="color: #7f8c8d;">
+                                                        Total: R$ ${(parseFloat(acessorio.preco) * (acessorio.quantidade || 1)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                    </small>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                    `;
+                } else {
+                    mostrarErro();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar detalhes:', error);
+                mostrarErro();
+            }
+        }
+
+        function mostrarErro() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error-message').classList.remove('hidden');
+        }
+
+        async function comprarCarro(carroId) {
+            // Verificar se o usuário está logado
+            const sessao = await Auth.verificarSessao();
+            
+            if (!sessao.logado) {
+                alert('Você precisa fazer login para comprar um carro.');
+                window.location.href = '/frontend/pages/login.html';
+                return;
+            }
+
+            if (confirm('Deseja realmente comprar este carro?')) {
+                try {
+                    const resultado = await API.comprarCarro(carroId);
+                    
+                    if (resultado.sucesso) {
+                        alert('Pedido realizado com sucesso!');
+                        window.location.href = '/frontend/pages/meus-pedidos.html';
+                    } else {
+                        alert('Erro ao realizar pedido: ' + (resultado.erro || 'Erro desconhecido'));
+                    }
+                } catch (error) {
+                    console.error('Erro ao comprar carro:', error);
+                    alert('Erro ao realizar pedido. Tente novamente.');
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @media (max-width: 768px) {
+            #carro-detalhes > div:first-child {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+</body>
+</html>
+

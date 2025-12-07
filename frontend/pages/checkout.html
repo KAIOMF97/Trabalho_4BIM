@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finalizar Compra - AutoMax</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .checkout-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 3rem;
+            min-height: calc(100vh - 200px);
+        }
+
+        .checkout-main {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .checkout-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .checkout-header h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .checkout-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .checkout-content {
+            padding: 2rem;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            font-weight: bold;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .step.completed {
+            background: #28a745;
+            color: white;
+        }
+
+        .step-connector {
+            width: 100px;
+            height: 2px;
+            background: #e9ecef;
+            margin: 0 1rem;
+            position: relative;
+            top: -1px;
+        }
+
+        .step-connector.completed {
+            background: #28a745;
+        }
+
+        .form-section {
+            margin-bottom: 3rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .form-section.hidden {
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .section-title h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+
+        .section-title p {
+            margin: 0.25rem 0 0 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-grid.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid.triple {
+            grid-template-columns: 2fr 1fr 1fr;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-control.error {
+            border-color: #dc3545;
+            background: #fff5f5;
+        }
+
+        .form-control.success {
+            border-color: #28a745;
+            background: #f8fff8;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .error-message::before {
+            content: "⚠";
+            margin-right: 0.3rem;
+        }
+
+        .success-message {
+            color: #28a745;
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .success-message::before {
+            content: "✓";
+            margin-right: 0.3rem;
+        }
+
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .payment-method {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .payment-method:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.1);
+        }
+
+        .payment-method.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .payment-method-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-method-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .installment-options {
+            display: grid;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .installment-option {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .installment-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .installment-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .installment-radio {
+            margin-right: 1rem;
+            transform: scale(1.2);
+        }
+
+        .installment-details {
+            flex: 1;
+        }
+
+        .installment-value {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .installment-total {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 0.2rem;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid #f8f9fa;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 150px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6a4190);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .checkout-sidebar {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+
+        .sidebar-content {
+            padding: 2rem;
+        }
+
+        .product-summary {
+            margin-bottom: 2rem;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-details {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #28a745;
+            text-align: center;
+            padding: 1rem;
+            background: #f8fff8;
+            border-radius: 12px;
+        }
+
+        .order-summary {
+            border-top: 2px solid #f8f9fa;
+            padding-top: 1.5rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .summary-row.total {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2c3e50;
+            border-top: 2px solid #f8f9fa;
+            padding-top: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .security-badges {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #f8f9fa;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .security-badge::before {
+            content: "🔒";
+            margin-right: 0.3rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-animation {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #28a745;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1rem;
+            animation: successPulse 0.6s ease;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 1024px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .checkout-sidebar {
+                order: -1;
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .checkout-container {
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid.triple {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation-buttons {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">AutoMax</div>
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="/">Início</a></li>
+                        <li><a href="/frontend/pages/carros.html">Carros</a></li>
+                        <li><a href="/frontend/pages/sobre.html">Sobre</a></li>
+                        <li><a href="/frontend/pages/contato.html">Contato</a></li>
+                    </ul>
+                </nav>
+                <div class="user-info" id="user-info">
+                    <!-- Conteúdo será preenchido pelo JavaScript -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Carregando informações do produto...</p>
+        </div>
+
+        <div id="checkout-container" class="checkout-container hidden">
+            <!-- Conteúdo Principal do Checkout -->
+            <div class="checkout-main">
+                <div class="checkout-header">
+                    <h1>Finalizar Compra</h1>
+                    <p>Complete suas informações para finalizar a compra do seu veículo</p>
+                </div>
+
+                <div class="checkout-content">
+                    <!-- Indicador de Etapas -->
+                    <div class="step-indicator">
+                        <div class="step active" id="step-1">1</div>
+                        <div class="step-connector" id="connector-1"></div>
+                        <div class="step" id="step-2">2</div>
+                        <div class="step-connector" id="connector-2"></div>
+                        <div class="step" id="step-3">3</div>
+                    </div>
+
+                    <form id="checkout-form">
+                        <!-- Etapa 1: Dados Pessoais -->
+                        <div class="form-section" id="section-1">
+                            <div class="section-header">
+                                <div class="section-icon">👤</div>
+                                <div class="section-title">
+                                    <h2>Dados Pessoais</h2>
+                                    <p>Informe seus dados pessoais para identificação</p>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="nome">Nome Completo *</label>
+                                    <input type="text" id="nome" name="nome" class="form-control" required>
+                                    <div class="error-message" id="nome-error"></div>
+                                    <div class="success-message" id="nome-success"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cpf">CPF *</label>
+                                    <input type="text" id="cpf" name="cpf" class="form-control" required maxlength="14" placeholder="000.000.000-00">
+                                    <div class="error-message" id="cpf-error"></div>
+                                    <div class="success-message" id="cpf-success"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="email">E-mail *</label>
+                                    <input type="email" id="email" name="email" class="form-control" required placeholder="seu@email.com">
+                                    <div class="error-message" id="email-error"></div>
+                                    <div class="success-message" id="email-success"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="telefone">Telefone *</label>
+                                    <input type="text" id="telefone" name="telefone" class="form-control" required maxlength="15" placeholder="(11) 99999-9999">
+                                    <div class="error-message" id="telefone-error"></div>
+                                    <div class="success-message" id="telefone-success"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="data-nascimento">Data de Nascimento *</label>
+                                    <input type="date" id="data-nascimento" name="data-nascimento" class="form-control" required>
+                                    <div class="error-message" id="data-nascimento-error"></div>
+                                    <div class="success-message" id="data-nascimento-success"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="rg">RG *</label>
+                                    <input type="text" id="rg" name="rg" class="form-control" required placeholder="00.000.000-0">
+                                    <div class="error-message" id="rg-error"></div>
+                                    <div class="success-message" id="rg-success"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Etapa 2: Endereço -->
+                        <div class="form-section hidden" id="section-2">
+                            <div class="section-header">
+                                <div class="section-icon">📍</div>
+                                <div class="section-title">
+                                    <h2>Endereço de Entrega</h2>
+                                    <p>Onde você gostaria de receber seu veículo</p>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="cep">CEP *</label>
+                                    <input type="text" id="cep" name="cep" class="form-control" required maxlength="9" placeholder="00000-000">
+                                    <div class="error-message" id="cep-error"></div>
+                                    <div class="success-message" id="cep-success"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cidade">Cidade *</label>
+                                    <input type="text" id="cidade" name="cidade" class="form-control" required>
+                                    <div class="error-message" id="cidade-error"></div>
+                                    <div class="success-message" id="cidade-success"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-grid single">
+                                <div class="form-group">
+                                    <label for="endereco">Endereço Completo *</label>
+                                    <input type="text" id="endereco" name="endereco" class="form-control" required placeholder="Rua, número, bairro">
+                                    <div class="error-message" id="endereco-error"></div>
+                                    <div class="success-message" id="endereco-success"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="estado">Estado *</label>
+                                    <select id="estado" name="estado" class="form-control" required>
+                                        <option value="">Selecione o estado</option>
+                                        <option value="AC">Acre</option>
+                                        <option value="AL">Alagoas</option>
+                                        <option value="AP">Amapá</option>
+                                        <option value="AM">Amazonas</option>
+                                        <option value="BA">Bahia</option>
+                                        <option value="CE">Ceará</option>
+                                        <option value="DF">Distrito Federal</option>
+                                        <option value="ES">Espírito Santo</option>
+                                        <option value="GO">Goiás</option>
+                                        <option value="MA">Maranhão</option>
+                                        <option value="MT">Mato Grosso</option>
+                                        <option value="MS">Mato Grosso do Sul</option>
+                                        <option value="MG">Minas Gerais</option>
+                                        <option value="PA">Pará</option>
+                                        <option value="PB">Paraíba</option>
+                                        <option value="PR">Paraná</option>
+                                        <option value="PE">Pernambuco</option>
+                                        <option value="PI">Piauí</option>
+                                        <option value="RJ">Rio de Janeiro</option>
+                                        <option value="RN">Rio Grande do Norte</option>
+                                        <option value="RS">Rio Grande do Sul</option>
+                                        <option value="RO">Rondônia</option>
+                                        <option value="RR">Roraima</option>
+                                        <option value="SC">Santa Catarina</option>
+                                        <option value="SP">São Paulo</option>
+                                        <option value="SE">Sergipe</option>
+                                        <option value="TO">Tocantins</option>
+                                    </select>
+                                    <div class="error-message" id="estado-error"></div>
+                                    <div class="success-message" id="estado-success"></div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="complemento">Complemento</label>
+                                    <input type="text" id="complemento" name="complemento" class="form-control" placeholder="Apartamento, bloco, etc.">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Etapa 3: Pagamento -->
+                        <div class="form-section hidden" id="section-3">
+                            <div class="section-header">
+                                <div class="section-icon">💳</div>
+                                <div class="section-title">
+                                    <h2>Forma de Pagamento</h2>
+                                    <p>Escolha como deseja pagar pelo seu veículo</p>
+                                </div>
+                            </div>
+
+                            <!-- Métodos de Pagamento -->
+                            <div class="payment-methods">
+                                <div class="payment-method selected" data-method="credit">
+                                    <div class="payment-method-icon">💳</div>
+                                    <div class="payment-method-name">Cartão de Crédito</div>
+                                </div>
+                                <div class="payment-method" data-method="debit">
+                                    <div class="payment-method-icon">💰</div>
+                                    <div class="payment-method-name">Cartão de Débito</div>
+                                </div>
+                                <div class="payment-method" data-method="financing">
+                                    <div class="payment-method-icon">🏦</div>
+                                    <div class="payment-method-name">Financiamento</div>
+                                </div>
+                            </div>
+
+                            <!-- Opções de Parcelamento -->
+                            <div id="installment-section">
+                                <h3 style="margin-bottom: 1rem; color: #2c3e50;">Opções de Parcelamento</h3>
+                                <div class="installment-options" id="installment-options">
+                                    <!-- Opções serão geradas dinamicamente -->
+                                </div>
+                            </div>
+
+                            <!-- Dados do Cartão -->
+                            <div id="card-section" style="margin-top: 2rem;">
+                                <h3 style="margin-bottom: 1rem; color: #2c3e50;">Dados do Cartão</h3>
+                                
+                                <div class="form-grid single">
+                                    <div class="form-group">
+                                        <label for="numero-cartao">Número do Cartão *</label>
+                                        <input type="text" id="numero-cartao" name="numero-cartao" class="form-control" required maxlength="19" placeholder="0000 0000 0000 0000">
+                                        <div class="error-message" id="numero-cartao-error"></div>
+                                        <div class="success-message" id="numero-cartao-success"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="nome-cartao">Nome no Cartão *</label>
+                                        <input type="text" id="nome-cartao" name="nome-cartao" class="form-control" required placeholder="Nome como está no cartão">
+                                        <div class="error-message" id="nome-cartao-error"></div>
+                                        <div class="success-message" id="nome-cartao-success"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cvv">CVV *</label>
+                                        <input type="text" id="cvv" name="cvv" class="form-control" required maxlength="4" placeholder="000">
+                                        <div class="error-message" id="cvv-error"></div>
+                                        <div class="success-message" id="cvv-success"></div>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="mes-vencimento">Mês de Vencimento *</label>
+                                        <select id="mes-vencimento" name="mes-vencimento" class="form-control" required>
+                                            <option value="">Mês</option>
+                                            <option value="01">01 - Janeiro</option>
+                                            <option value="02">02 - Fevereiro</option>
+                                            <option value="03">03 - Março</option>
+                                            <option value="04">04 - Abril</option>
+                                            <option value="05">05 - Maio</option>
+                                            <option value="06">06 - Junho</option>
+                                            <option value="07">07 - Julho</option>
+                                            <option value="08">08 - Agosto</option>
+                                            <option value="09">09 - Setembro</option>
+                                            <option value="10">10 - Outubro</option>
+                                            <option value="11">11 - Novembro</option>
+                                            <option value="12">12 - Dezembro</option>
+                                        </select>
+                                        <div class="error-message" id="mes-vencimento-error"></div>
+                                        <div class="success-message" id="mes-vencimento-success"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ano-vencimento">Ano de Vencimento *</label>
+                                        <select id="ano-vencimento" name="ano-vencimento" class="form-control" required>
+                                            <option value="">Ano</option>
+                                        </select>
+                                        <div class="error-message" id="ano-vencimento-error"></div>
+                                        <div class="success-message" id="ano-vencimento-success"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botões de Navegação -->
+                        <div class="navigation-buttons">
+                            <button type="button" class="btn btn-secondary" id="btn-previous" onclick="previousStep()" style="display: none;">
+                                ← Voltar
+                            </button>
+                            <div></div>
+                            <button type="button" class="btn btn-primary" id="btn-next" onclick="nextStep()">
+                                Continuar →
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="btn-submit" style="display: none;">
+                                Finalizar Compra
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sidebar com Resumo -->
+            <div class="checkout-sidebar">
+                <div class="sidebar-header">
+                    <h3>Resumo do Pedido</h3>
+                </div>
+                <div class="sidebar-content">
+                    <div class="product-summary">
+                        <img id="product-image" src="" alt="" class="product-image">
+                        <div class="product-name" id="product-name"></div>
+                        <div class="product-details" id="product-details"></div>
+                        <div class="product-price" id="product-price"></div>
+                    </div>
+
+                    <div class="order-summary">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span id="summary-subtotal"></span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Forma de Pagamento:</span>
+                            <span id="summary-payment">Cartão de Crédito</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Parcelamento:</span>
+                            <span id="summary-installment">À vista</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total:</span>
+                            <span id="summary-total"></span>
+                        </div>
+                    </div>
+
+                    <div class="security-badges">
+                        <div class="security-badge">Compra Segura</div>
+                        <div class="security-badge">SSL</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Sucesso -->
+        <div id="success-screen" class="checkout-container hidden">
+            <div class="checkout-main">
+                <div class="success-animation">
+                    <div class="success-icon">✓</div>
+                    <h2 style="color: #28a745; margin-bottom: 1rem;">Compra Realizada com Sucesso!</h2>
+                    <p style="color: #6c757d; margin-bottom: 2rem;">Seu pedido foi processado e você receberá um e-mail de confirmação em breve.</p>
+                    <div style="background: #f8fff8; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                        <p><strong>Número do Pedido:</strong> <span id="order-number"></span></p>
+                        <p><strong>Data da Compra:</strong> <span id="order-date"></span></p>
+                    </div>
+                    <a href="/frontend/pages/meus-pedidos.html" class="btn btn-primary">Ver Meus Pedidos</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="error-message" class="alert alert-error hidden">
+            Erro ao carregar informações do produto. Tente novamente mais tarde.
+        </div>
+    </main>
+
+    <footer style="background-color: #2c3e50; color: white; text-align: center; padding: 2rem 0; margin-top: 3rem;">
+        <div class="container">
+            <p>&copy; 2024 AutoMax. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/checkout.js"></script>
+</body>
+</html>

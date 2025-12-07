@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carros - AutoMax</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">AutoMax</div>
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="/">Início</a></li>
+                        <li><a href="/frontend/pages/carros.html">Carros</a></li>
+                        <li><a href="/frontend/pages/sobre.html">Sobre</a></li>
+                        <li><a href="/frontend/pages/contato.html">Contato</a></li>
+                    </ul>
+                </nav>
+                <div class="user-info" id="user-info">
+                    <!-- Conteúdo será preenchido pelo JavaScript -->
+                </div>
+                <a href="/frontend/pages/login.html" class="btn btn-primary" id="login-btn">Login</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1 class="page-title">Nossos Carros</h1>
+
+            
+    <!-- Busca por ID (estilo DW1) -->
+    <section class="search-by-id" style="background:#f7f7f7; padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
+        <h3 style="margin-bottom:0.5rem; color: #2c3e50;">Buscar carro por ID</h3>
+        <input type="number" id="buscar-id-input" placeholder="Digite o ID do carro" class="form-control" style="width:220px; display:inline-block; margin-right:0.5rem;">
+        <button class="btn btn-primary" onclick="buscarPorId()">Buscar</button>
+        <div id="resultado-busca" style="margin-top:1rem;"></div>
+    </section>
+    <!-- Filtros -->
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: #2c3e50;">Filtros</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label for="filtro-marca">Marca:</label>
+                        <select id="filtro-marca" class="form-control">
+                            <option value="">Todas as marcas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filtro-ano-min">Ano mínimo:</label>
+                        <input type="number" id="filtro-ano-min" class="form-control" min="1990" max="2024">
+                    </div>
+                    <div class="form-group">
+                        <label for="filtro-ano-max">Ano máximo:</label>
+                        <input type="number" id="filtro-ano-max" class="form-control" min="1990" max="2024">
+                    </div>
+                    <div class="form-group">
+                        <label for="filtro-preco-max">Preço máximo:</label>
+                        <input type="number" id="filtro-preco-max" class="form-control" min="0" step="1000">
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="aplicarFiltros()">Aplicar Filtros</button>
+                    <button class="btn btn-secondary" onclick="limparFiltros()">Limpar Filtros</button>
+                </div>
+            </div>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Carregando carros...</p>
+            </div>
+
+            <div id="carros-container" class="cards-grid hidden">
+                <!-- Carros serão carregados aqui -->
+            </div>
+
+            <div id="error-message" class="alert alert-error hidden">
+                Erro ao carregar os carros. Tente novamente mais tarde.
+            </div>
+        </div>
+    </main>
+
+    <footer style="background-color: #2c3e50; color: white; text-align: center; padding: 2rem 0; margin-top: 3rem;">
+        <div class="container">
+            <p>&copy; 2024 AutoMax. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        let todosCarros = [];
+        let carrosFiltrados = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await carregarCarros();
+            preencherFiltroMarcas();
+        });
+
+        async function carregarCarros() {
+            const loadingElement = document.getElementById('loading');
+            const carrosContainer = document.getElementById('carros-container');
+            const errorMessage = document.getElementById('error-message');
+
+            try {
+                const carros = await API.listarCarros();
+
+                if (carros && !carros.erro && Array.isArray(carros)) {
+                    todosCarros = carros;
+                    carrosFiltrados = carros;
+                    
+                    loadingElement.classList.add('hidden');
+                    carrosContainer.classList.remove('hidden');
+
+                    exibirCarros(carros);
+                } else {
+                    throw new Error('Erro ao carregar carros');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                loadingElement.classList.add('hidden');
+                errorMessage.classList.remove('hidden');
+            }
+        }
+
+        function exibirCarros(carros) {
+            const carrosContainer = document.getElementById('carros-container');
+
+            if (carros.length === 0) {
+                carrosContainer.innerHTML = '<p style="text-align: center; color: #7f8c8d; grid-column: 1 / -1;">Nenhum carro encontrado com os filtros aplicados.</p>';
+                return;
+            }
+
+            carrosContainer.innerHTML = carros.map(carro => `
+                <div class="card">
+                    <img src="${carro.imagem_url || 'https://via.placeholder.com/300x200?text=Sem+Imagem'}" 
+                         alt="${carro.modelo}" class="card-image">
+                    <div class="card-content">
+                        <h3 class="card-title">${carro.modelo}</h3>
+                        <p class="card-subtitle">${carro.marca} - ${carro.ano}</p>
+                        <p class="card-description">${carro.descricao || 'Descrição não disponível'}</p>
+                        <p class="card-price">R$ ${parseFloat(carro.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                        <div class="card-actions">
+                            <a href="/frontend/pages/carro-detalhes.html?id=${carro.id}" class="btn btn-primary">Ver Detalhes</a>
+                            <a href="/frontend/pages/checkout.html?id=${carro.id}" class="btn btn-success">Comprar</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function preencherFiltroMarcas() {
+            const filtroMarca = document.getElementById('filtro-marca');
+            const marcas = [...new Set(todosCarros.map(carro => carro.marca))].sort();
+            
+            marcas.forEach(marca => {
+                const option = document.createElement('option');
+                option.value = marca;
+                option.textContent = marca;
+                filtroMarca.appendChild(option);
+            });
+        }
+
+        function aplicarFiltros() {
+            const marca = document.getElementById('filtro-marca').value;
+            const anoMin = parseInt(document.getElementById('filtro-ano-min').value) || 0;
+            const anoMax = parseInt(document.getElementById('filtro-ano-max').value) || 9999;
+            const precoMax = parseFloat(document.getElementById('filtro-preco-max').value) || Infinity;
+
+            carrosFiltrados = todosCarros.filter(carro => {
+                return (!marca || carro.marca === marca) &&
+                       (carro.ano >= anoMin) &&
+                       (carro.ano <= anoMax) &&
+                       (parseFloat(carro.preco) <= precoMax);
+            });
+
+            exibirCarros(carrosFiltrados);
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtro-marca').value = '';
+            document.getElementById('filtro-ano-min').value = '';
+            document.getElementById('filtro-ano-max').value = '';
+            document.getElementById('filtro-preco-max').value = '';
+            
+            carrosFiltrados = todosCarros;
+            exibirCarros(carrosFiltrados);
+        }
+
+        async function comprarCarro(carroId) {
+            // Verificar se o usuário está logado
+            const sessao = await Auth.verificarSessao();
+            
+            if (!sessao.logado) {
+                alert('Você precisa fazer login para comprar um carro.');
+                window.location.href = '/frontend/pages/login.html';
+                return;
+            }
+
+            if (confirm('Deseja realmente comprar este carro?')) {
+                try {
+                    const resultado = await API.comprarCarro(carroId);
+                    
+                    if (resultado.sucesso) {
+                        alert('Pedido realizado com sucesso!');
+                        window.location.href = '/frontend/pages/meus-pedidos.html';
+                    } else {
+                        alert('Erro ao realizar pedido: ' + (resultado.erro || 'Erro desconhecido'));
+                    }
+                } catch (error) {
+                    console.error('Erro ao comprar carro:', error);
+                    alert('Erro ao realizar pedido. Tente novamente.');
+                }
+            }
+        }
+    
+        async function buscarPorId(){
+            const id = document.getElementById('buscar-id-input').value;
+            if(!id){ alert('Digite um ID v�lido'); return; }
+            try{
+                const res = await API.buscarCarro(id);
+                if(res.erro){ document.getElementById('resultado-busca').innerHTML = '<p>Nenhum carro encontrado com esse ID.</p>'; return; }
+                const img = res.imagem_url ? ('/uploads/carros/' + res.imagem_url) : '/frontend/img/no-image.png';
+                const html = `
+                <div class="carro-busca" style="border:1px solid #ddd; padding:1rem; border-radius:6px;">
+                  <h4>${res.marca} ${res.modelo} (${res.ano}) - R$ ${res.preco}</h4>
+                  <p>${res.descricao || ''}</p>
+                  <img src="${'${img}'}" alt="Imagem" style="max-width:200px; display:block; margin-top:0.5rem;">
+                  <div style="margin-top:1rem;">
+                    <button class="btn btn-secondary" onclick="mostrarFormEdicao(${res.id})">Editar</button>
+                    <button class="btn btn-danger" onclick="deletarPorId(${res.id})">Excluir</button>
+                  </div>
+                  <div id="form-edicao-${res.id}" style="display:none; margin-top:1rem;"></div>
+                </div>`;
+                document.getElementById('resultado-busca').innerHTML = html;
+            }catch(err){
+                console.error(err);
+                alert('Erro ao buscar carro');
+            }
+        }
+
+        async function mostrarFormEdicao(id){
+            const container = document.getElementById('form-edicao-'+id);
+            if(!container) return;
+            if(container.style.display === 'block'){
+                container.style.display='none'; return;
+            }
+            try{
+                const carro = await API.buscarCarro(id);
+                container.style.display='block';
+                container.innerHTML = `
+                  <form id="editar-form-${id}" style="display:flex; flex-direction:column; gap:0.5rem;" enctype="multipart/form-data">
+                    <input name="modelo" placeholder="Modelo" value="${'${carro.modelo}'}" required>
+                    <input name="marca" placeholder="Marca" value="${'${carro.marca}'}" required>
+                    <input name="ano" type="number" placeholder="Ano" value="${'${carro.ano}'}" required>
+                    <input name="preco" type="number" placeholder="Pre�o" value="${'${carro.preco}'}" required>
+                    <textarea name="descricao" placeholder="Descri��o">${'${carro.descricao || ""}'}</textarea>
+                    <label>Alterar imagem: <input type="file" name="imagem"></label>
+                    <div>
+                      <button type="button" class="btn btn-primary" onclick="salvarEdicao(${id})">Salvar</button>
+                      <button type="button" class="btn btn-secondary" onclick="container.style.display='none'">Cancelar</button>
+                    </div>
+                  </form>
+                `;
+            }catch(err){
+                console.error(err);
+                alert('Erro ao carregar formul�rio de edi��o');
+            }
+        }
+
+        async function salvarEdicao(id){
+            const form = document.getElementById('editar-form-'+id);
+            if(!form) return;
+            const fd = new FormData(form);
+            try{
+                const resp = await fetch(`/api/carros/${id}`, {
+                    method: 'PUT',
+                    body: fd,
+                    credentials: 'include'
+                });
+                const data = await resp.json();
+                if(data.sucesso){
+                    alert('Carro atualizado com sucesso');
+                    carregarCarros();
+                    buscarPorId();
+                } else {
+                    alert(data.erro || 'Erro ao atualizar');
+                }
+            }catch(err){
+                console.error(err);
+                alert('Erro ao enviar atualiza��o');
+            }
+        }
+
+        async function deletarPorId(id){
+            if(!confirm('Confirma exclus�o deste carro (ID '+id+')?')) return;
+            try{
+                const res = await API.deletarCarro(id);
+                if(res.sucesso){
+                    alert('Carro exclu�do');
+                    carregarCarros();
+                    document.getElementById('resultado-busca').innerHTML='';
+                } else {
+                    alert(res.erro || 'Erro ao excluir');
+                }
+            }catch(err){
+                console.error(err);
+                alert('Erro ao excluir carro');
+            }
+        }
+        </script>
+</body>
+</html>
+

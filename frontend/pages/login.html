@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AutoMax</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">AutoMax</div>
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="/">Início</a></li>
+                        <li><a href="/frontend/pages/carros.html">Carros</a></li>
+                        <li><a href="/frontend/pages/sobre.html">Sobre</a></li>
+                        <li><a href="/frontend/pages/contato.html">Contato</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="form-container">
+                <h1 style="text-align: center; margin-bottom: 2rem; color: #2c3e50;">Login</h1>
+                
+                <div id="alert-container"></div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="senha">Senha:</label>
+                        <input type="password" id="senha" name="senha" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Entrar</button>
+                    </div>
+                </form>
+
+                <div style="text-align: center; margin-top: 1rem;">
+                    <p>Não tem uma conta? <a href="/frontend/pages/registro.html">Registre-se aqui</a></p>
+                </div>
+
+                <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ecf0f1;">
+                    <h3 style="color: #7f8c8d; margin-bottom: 1rem;">Contas de Teste</h3>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="preencherLogin('admin@automax.com', 'admin123')">
+                            Login Admin
+                        </button>
+                        <button class="btn btn-secondary" onclick="preencherLogin('cliente@teste.com', 'cliente123')">
+                            Login Cliente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer style="background-color: #2c3e50; color: white; text-align: center; padding: 2rem 0; margin-top: 3rem;">
+        <div class="container">
+            <p>&copy; 2024 AutoMax. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar se já está logado
+            Auth.verificarSessao().then(sessao => {
+                if (sessao.logado) {
+                    window.location.href = '/';
+                }
+            });
+
+            const loginForm = document.getElementById('login-form');
+            const alertContainer = document.getElementById('alert-container');
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const senha = document.getElementById('senha').value;
+
+                // Limpar alertas anteriores
+                alertContainer.innerHTML = '';
+
+                try {
+                    const resultado = await Auth.login(email, senha);
+
+                    if (resultado.sucesso) {
+                        alertContainer.innerHTML = '<div class="alert alert-success">Login realizado com sucesso! Redirecionando...</div>';
+                        
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                    } else {
+                        alertContainer.innerHTML = `<div class="alert alert-error">${resultado.erro || 'Erro ao fazer login'}</div>`;
+                    }
+                } catch (error) {
+                    console.error('Erro no login:', error);
+                    alertContainer.innerHTML = '<div class="alert alert-error">Erro de conexão. Tente novamente.</div>';
+                }
+            });
+        });
+
+        function preencherLogin(email, senha) {
+            document.getElementById('email').value = email;
+            document.getElementById('senha').value = senha;
+        }
+    </script>
+</body>
+</html>
+

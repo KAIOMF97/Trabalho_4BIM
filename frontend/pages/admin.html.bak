@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle - AutoMax</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">AutoMax - Admin</div>
+                <nav>
+                    <ul class="nav-menu">
+                        <li><a href="/">Início</a></li>
+                        <li><a href="/frontend/pages/carros.html">Carros</a></li>
+                        <li><a href="/frontend/pages/admin.html">Painel Admin</a></li>
+                    </ul>
+                </nav>
+                <div class="user-info" id="user-info">
+                    <!-- Conteúdo será preenchido pelo JavaScript -->
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1 class="page-title">Painel de Controle</h1>
+
+            <div id="access-denied" class="alert alert-error hidden">
+                Acesso negado. Apenas administradores podem acessar esta página.
+                <a href="/" class="btn btn-primary" style="margin-left: 1rem;">Voltar ao Início</a>
+            </div>
+
+            <div id="admin-content" class="hidden">
+                <!-- Navegação do painel -->
+                <div style="background: white; padding: 1rem; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 2rem;">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <button class="btn btn-primary" onclick="mostrarSecao('carros')">Gerenciar Carros</button>
+                        <button class="btn btn-primary" onclick="mostrarSecao('acessorios')">Gerenciar Acessórios</button>
+                        <button class="btn btn-primary" onclick="mostrarSecao('pedidos')">Gerenciar Pedidos</button>
+                        <button class="btn btn-primary" onclick="mostrarSecao('usuarios')">Gerenciar Usuários</button>
+                    </div>
+                </div>
+
+                <!-- Seção de Carros -->
+                <div id="secao-carros" class="admin-section hidden">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="color: #2c3e50;">Gerenciar Carros</h2>
+                        <button class="btn btn-success" onclick="abrirModalCarro()">Adicionar Carro</button>
+                    </div>
+                    
+                    <div id="carros-lista" class="table-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Carregando carros...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Acessórios -->
+                <div id="secao-acessorios" class="admin-section hidden">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 style="color: #2c3e50;">Gerenciar Acessórios</h2>
+                        <button class="btn btn-success" onclick="abrirModalAcessorio()">Adicionar Acessório</button>
+                    </div>
+                    
+                    <div id="acessorios-lista" class="table-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Carregando acessórios...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Pedidos -->
+                <div id="secao-pedidos" class="admin-section hidden">
+                    <h2 style="color: #2c3e50; margin-bottom: 2rem;">Gerenciar Pedidos</h2>
+                    
+                    <div id="pedidos-lista" class="table-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Carregando pedidos...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção de Usuários -->
+                <div id="secao-usuarios" class="admin-section hidden">
+                    <h2 style="color: #2c3e50; margin-bottom: 2rem;">Gerenciar Usuários</h2>
+                    
+                    <div id="usuarios-lista" class="table-container">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <p>Carregando usuários...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal para Carro -->
+    <div id="modal-carro" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-carro-titulo">Adicionar Carro</h3>
+                <span class="close" onclick="fecharModal('modal-carro')">&times;</span>
+            </div>
+            <form id="form-carro">
+                <input type="hidden" id="carro-id">
+                <div class="form-group">
+                    <label for="carro-modelo">Modelo:</label>
+                    <input type="text" id="carro-modelo" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="carro-marca">Marca:</label>
+                    <input type="text" id="carro-marca" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="carro-ano">Ano:</label>
+                    <input type="number" id="carro-ano" class="form-control" min="1990" max="2024" required>
+                </div>
+                <div class="form-group">
+                    <label for="carro-preco">Preço:</label>
+                    <input type="number" id="carro-preco" class="form-control" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="carro-descricao">Descrição:</label>
+                    <textarea id="carro-descricao" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="carro-imagem">Imagem do Carro:</label>
+                    <input type="file" id="carro-imagem" class="form-control" accept="image/*">
+                    <small class="form-text">Formatos aceitos: JPG, PNG, GIF, WebP (máximo 5MB)</small>
+                    <div id="preview-imagem" style="margin-top: 10px;"></div>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modal-carro')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Acessório -->
+    <div id="modal-acessorio" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-acessorio-titulo">Adicionar Acessório</h3>
+                <span class="close" onclick="fecharModal('modal-acessorio')">&times;</span>
+            </div>
+            <form id="form-acessorio">
+                <input type="hidden" id="acessorio-id">
+                <div class="form-group">
+                    <label for="acessorio-nome">Nome:</label>
+                    <input type="text" id="acessorio-nome" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="acessorio-descricao">Descrição:</label>
+                    <textarea id="acessorio-descricao" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="acessorio-preco">Preço:</label>
+                    <input type="number" id="acessorio-preco" class="form-control" step="0.01" min="0" required>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modal-acessorio')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer style="background-color: #2c3e50; color: white; text-align: center; padding: 2rem 0; margin-top: 3rem;">
+        <div class="container">
+            <p>&copy; 2024 AutoMax. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        let secaoAtual = '';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const sessao = await Auth.verificarSessao();
+            
+            if (!sessao.logado || sessao.usuario.tipo !== 'admin') {
+                document.getElementById('access-denied').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('admin-content').classList.remove('hidden');
+            
+            // Mostrar seção de carros por padrão
+            mostrarSecao('carros');
+        });
+
+        function mostrarSecao(secao) {
+            // Esconder todas as seções
+            document.querySelectorAll('.admin-section').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Mostrar seção selecionada
+            document.getElementById(`secao-${secao}`).classList.remove('hidden');
+            secaoAtual = secao;
+
+            // Carregar dados da seção
+            switch (secao) {
+                case 'carros':
+                    carregarCarros();
+                    break;
+                case 'acessorios':
+                    carregarAcessorios();
+                    break;
+                case 'pedidos':
+                    carregarPedidos();
+                    break;
+                case 'usuarios':
+                    carregarUsuarios();
+                    break;
+            }
+        }
+
+        async function carregarCarros() {
+            const container = document.getElementById('carros-lista');
+            
+            try {
+                const carros = await API.listarCarros();
+                
+                if (carros && !carros.erro && Array.isArray(carros)) {
+                    container.innerHTML = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Modelo</th>
+                                    <th>Marca</th>
+                                    <th>Ano</th>
+                                    <th>Preço</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${carros.map(carro => `
+                                    <tr>
+                                        <td>${carro.id}</td>
+                                        <td>${carro.modelo}</td>
+                                        <td>${carro.marca}</td>
+                                        <td>${carro.ano}</td>
+                                        <td>R$ ${parseFloat(carro.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                        <td>
+                                            <button class="btn btn-secondary" onclick="editarCarro(${carro.id})">Editar</button>
+                                            <button class="btn btn-danger" onclick="deletarCarro(${carro.id})">Excluir</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    container.innerHTML = '<p>Erro ao carregar carros.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar carros:', error);
+                container.innerHTML = '<p>Erro ao carregar carros.</p>';
+            }
+        }
+
+        async function carregarAcessorios() {
+            const container = document.getElementById('acessorios-lista');
+            
+            try {
+                const acessorios = await API.listarAcessorios();
+                
+                if (acessorios && !acessorios.erro && Array.isArray(acessorios)) {
+                    container.innerHTML = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Descrição</th>
+                                    <th>Preço</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${acessorios.map(acessorio => `
+                                    <tr>
+                                        <td>${acessorio.id}</td>
+                                        <td>${acessorio.nome}</td>
+                                        <td>${acessorio.descricao || 'N/A'}</td>
+                                        <td>R$ ${parseFloat(acessorio.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                        <td>
+                                            <button class="btn btn-secondary" onclick="editarAcessorio(${acessorio.id})">Editar</button>
+                                            <button class="btn btn-danger" onclick="deletarAcessorio(${acessorio.id})">Excluir</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    container.innerHTML = '<p>Erro ao carregar acessórios.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar acessórios:', error);
+                container.innerHTML = '<p>Erro ao carregar acessórios.</p>';
+            }
+        }
+
+        async function carregarPedidos() {
+            const container = document.getElementById('pedidos-lista');
+            
+            try {
+                const pedidos = await API.listarPedidos();
+                
+                if (pedidos && !pedidos.erro && Array.isArray(pedidos)) {
+                    container.innerHTML = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Data</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pedidos.map(pedido => `
+                                    <tr>
+                                        <td>${pedido.id}</td>
+                                        <td>${pedido.usuario_nome}</td>
+                                        <td>${new Date(pedido.data_pedido).toLocaleDateString('pt-BR')}</td>
+                                        <td>
+                                            <select onchange="atualizarStatusPedido(${pedido.id}, this.value)">
+                                                <option value="pendente" ${pedido.status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                                                <option value="concluido" ${pedido.status === 'concluido' ? 'selected' : ''}>Concluído</option>
+                                                <option value="cancelado" ${pedido.status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger" onclick="deletarPedido(${pedido.id})">Excluir</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    container.innerHTML = '<p>Erro ao carregar pedidos.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar pedidos:', error);
+                container.innerHTML = '<p>Erro ao carregar pedidos.</p>';
+            }
+        }
+
+        async function carregarUsuarios() {
+            const container = document.getElementById('usuarios-lista');
+            
+            try {
+                const usuarios = await API.listarUsuarios();
+                
+                if (usuarios && !usuarios.erro && Array.isArray(usuarios)) {
+                    container.innerHTML = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Tipo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${usuarios.map(usuario => `
+                                    <tr>
+                                        <td>${usuario.id}</td>
+                                        <td>${usuario.nome}</td>
+                                        <td>${usuario.email}</td>
+                                        <td>${usuario.tipo}</td>
+                                        <td>
+                                            <button class="btn btn-danger" onclick="deletarUsuario(${usuario.id})">Excluir</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    container.innerHTML = '<p>Erro ao carregar usuários.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                container.innerHTML = '<p>Erro ao carregar usuários.</p>';
+            }
+        }
+
+        // Funções dos modais
+        function abrirModalCarro(id = null) {
+            const modal = document.getElementById('modal-carro');
+            const titulo = document.getElementById('modal-carro-titulo');
+            const form = document.getElementById('form-carro');
+            
+            form.reset();
+            document.getElementById('carro-id').value = id || '';
+            document.getElementById('preview-imagem').innerHTML = '';
+            
+            if (id) {
+                titulo.textContent = 'Editar Carro';
+                // Carregar dados do carro para edição
+                carregarDadosCarro(id);
+            } else {
+                titulo.textContent = 'Adicionar Carro';
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function abrirModalAcessorio(id = null) {
+            const modal = document.getElementById('modal-acessorio');
+            const titulo = document.getElementById('modal-acessorio-titulo');
+            const form = document.getElementById('form-acessorio');
+            
+            form.reset();
+            document.getElementById('acessorio-id').value = id || '';
+            
+            if (id) {
+                titulo.textContent = 'Editar Acessório';
+                // Carregar dados do acessório para edição
+                carregarDadosAcessorio(id);
+            } else {
+                titulo.textContent = 'Adicionar Acessório';
+            }
+            
+            modal.style.display = 'block';
+        }
+
+        function fecharModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Event listeners para os formulários
+        document.getElementById('form-carro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('carro-id').value;
+            const formData = new FormData();
+            
+            formData.append('modelo', document.getElementById('carro-modelo').value);
+            formData.append('marca', document.getElementById('carro-marca').value);
+            formData.append('ano', document.getElementById('carro-ano').value);
+            formData.append('preco', document.getElementById('carro-preco').value);
+            formData.append('descricao', document.getElementById('carro-descricao').value);
+            
+            const imagemFile = document.getElementById('carro-imagem').files[0];
+            if (imagemFile) {
+                formData.append('imagem', imagemFile);
+            }
+
+            try {
+                let resultado;
+                if (id) {
+                    resultado = await API.atualizarCarroComImagem(id, formData);
+                } else {
+                    resultado = await API.criarCarroComImagem(formData);
+                }
+
+                if (resultado.sucesso) {
+                    alert(id ? 'Carro atualizado com sucesso!' : 'Carro criado com sucesso!');
+                    fecharModal('modal-carro');
+                    carregarCarros();
+                } else {
+                    alert('Erro: ' + (resultado.erro || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro ao salvar carro:', error);
+                alert('Erro ao salvar carro.');
+            }
+        });
+
+        document.getElementById('form-acessorio').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await salvarAcessorio();
+        });
+
+        async function salvarAcessorio() {
+            const id = document.getElementById('acessorio-id').value;
+            const dados = {
+                nome: document.getElementById('acessorio-nome').value,
+                descricao: document.getElementById('acessorio-descricao').value,
+                preco: parseFloat(document.getElementById('acessorio-preco').value)
+            };
+
+            try {
+                let resultado;
+                if (id) {
+                    resultado = await API.atualizarAcessorio(id, dados);
+                } else {
+                    resultado = await API.criarAcessorio(dados);
+                }
+
+                if (resultado.sucesso) {
+                    alert(id ? 'Acessório atualizado com sucesso!' : 'Acessório criado com sucesso!');
+                    fecharModal('modal-acessorio');
+                    carregarAcessorios();
+                } else {
+                    alert('Erro: ' + (resultado.erro || 'Erro desconhecido'));
+                }
+            } catch (error) {
+                console.error('Erro ao salvar acessório:', error);
+                alert('Erro ao salvar acessório.');
+            }
+        }
+
+        async function editarCarro(id) {
+            abrirModalCarro(id);
+        }
+
+        async function carregarDadosCarro(id) {
+            try {
+                const carro = await API.buscarCarro(id);
+                if (carro && !carro.erro) {
+                    document.getElementById('carro-modelo').value = carro.modelo;
+                    document.getElementById('carro-marca').value = carro.marca;
+                    document.getElementById('carro-ano').value = carro.ano;
+                    document.getElementById('carro-preco').value = carro.preco;
+                    document.getElementById('carro-descricao').value = carro.descricao || '';
+                    
+                    // Mostrar imagem atual se existir
+                    const previewDiv = document.getElementById('preview-imagem');
+                    if (carro.imagem_url) {
+                        previewDiv.innerHTML = `
+                            <div style="margin-top: 10px;">
+                                <p>Imagem atual:</p>
+                                <img src="${carro.imagem_url}" alt="Imagem atual" style="max-width: 200px; max-height: 150px; border: 1px solid #ddd; border-radius: 5px;">
+                                <p style="font-size: 12px; color: #666;">Selecione uma nova imagem para substituir</p>
+                            </div>
+                        `;
+                    } else {
+                        previewDiv.innerHTML = '';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do carro:', error);
+            }
+        }
+
+        function limparFormularioCarro() {
+            document.getElementById('carro-id').value = '';
+            document.getElementById('carro-modelo').value = '';
+            document.getElementById('carro-marca').value = '';
+            document.getElementById('carro-ano').value = '';
+            document.getElementById('carro-preco').value = '';
+            document.getElementById('carro-descricao').value = '';
+            document.getElementById('carro-imagem').value = '';
+            document.getElementById('preview-imagem').innerHTML = '';
+        }
+
+        // Preview da imagem selecionada
+        document.getElementById('carro-imagem').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const previewDiv = document.getElementById('preview-imagem');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewDiv.innerHTML = `
+                        <div style="margin-top: 10px;">
+                            <p>Preview da nova imagem:</p>
+                            <img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 150px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewDiv.innerHTML = '';
+            }
+        });
+
+        async function editarAcessorio(id) {
+            abrirModalAcessorio(id);
+        }
+
+        async function carregarDadosAcessorio(id) {
+            try {
+                const acessorio = await API.buscarAcessorio(id);
+                if (acessorio && !acessorio.erro) {
+                    document.getElementById('acessorio-nome').value = acessorio.nome;
+                    document.getElementById('acessorio-descricao').value = acessorio.descricao || '';
+                    document.getElementById('acessorio-preco').value = acessorio.preco;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do acessório:', error);
+            }
+        }
+
+        async function deletarCarro(id) {
+            if (confirm('Tem certeza que deseja excluir este carro?')) {
+                try {
+                    const resultado = await API.deletarCarro(id);
+                    if (resultado.sucesso) {
+                        alert('Carro excluído com sucesso!');
+                        carregarCarros();
+                    } else {
+                        alert('Erro ao excluir carro: ' + (resultado.erro || 'Erro desconhecido'));
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir carro:', error);
+                    alert('Erro ao excluir carro.');
+                }
+            }
+        }
+
+        async function deletarAcessorio(id) {
+            if (confirm('Tem certeza que deseja excluir este acessório?')) {
+                try {
+                    const resultado = await API.deletarAcessorio(id);
+                    if (resultado.sucesso) {
+                        alert('Acessório excluído com sucesso!');
+                        carregarAcessorios();
+                    } else {
+                        alert('Erro ao excluir acessório: ' + (resultado.erro || 'Erro desconhecido'));
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir acessório:', error);
+                    alert('Erro ao excluir acessório.');
+                }
+            }
+        }
+
+        async function atualizarStatusPedido(id, status) {
+            try {
+                const resultado = await API.atualizarPedido(id, status);
+                if (resultado.sucesso) {
+                    alert('Status do pedido atualizado com sucesso!');
+                } else {
+                    alert('Erro ao atualizar status: ' + (resultado.erro || 'Erro desconhecido'));
+                    carregarPedidos(); // Recarregar para reverter a mudança
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar status do pedido:', error);
+                alert('Erro ao atualizar status do pedido.');
+                carregarPedidos(); // Recarregar para reverter a mudança
+            }
+        }
+
+        async function deletarPedido(id) {
+            if (confirm('Tem certeza que deseja excluir este pedido?')) {
+                try {
+                    const resultado = await API.deletarPedido(id);
+                    if (resultado.sucesso) {
+                        alert('Pedido excluído com sucesso!');
+                        carregarPedidos();
+                    } else {
+                        alert('Erro ao excluir pedido: ' + (resultado.erro || 'Erro desconhecido'));
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir pedido:', error);
+                    alert('Erro ao excluir pedido.');
+                }
+            }
+        }
+
+        async function deletarUsuario(id) {
+            if (confirm('Tem certeza que deseja excluir este usuário?')) {
+                try {
+                    const resultado = await API.deletarUsuario(id);
+                    if (resultado.sucesso) {
+                        alert('Usuário excluído com sucesso!');
+                        carregarUsuarios();
+                    } else {
+                        alert('Erro ao excluir usuário: ' + (resultado.erro || 'Erro desconhecido'));
+                    }
+                } catch (error) {
+                    console.error('Erro ao excluir usuário:', error);
+                    alert('Erro ao excluir usuário.');
+                }
+            }
+        }
+
+        // Fechar modal ao clicar fora dele
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+    <style>
+        .admin-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</body>
+</html>
+
